@@ -1,0 +1,32 @@
+From 9c9c777aa30e4c2d99c94cfabbfb1f0f88e500dd Mon Sep 17 00:00:00 2001
+From: Ashlesh Gawande <agawande@memphis.edu>
+Date: Fri, 15 Mar 2019 11:50:34 -0500
+Subject: [PATCH] wscript update for android compilation
+
+Change-Id: I9ccafddc359410ed09a31a63c4f4510d87b5bf67
+---
+ wscript | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/wscript b/wscript
+index 9412e7d..c18fc69 100644
+--- a/wscript
++++ b/wscript
+@@ -24,11 +24,9 @@ def configure(conf):
+                'default-compiler-flags', 'boost',
+                'doxygen', 'sphinx_build'])
+ 
+-    if 'PKG_CONFIG_PATH' not in os.environ:
+-        os.environ['PKG_CONFIG_PATH'] = Utils.subst_vars('${LIBDIR}/pkgconfig', conf.env)
+-
+-    conf.check_cfg(package='libndn-cxx', args=['--cflags', '--libs'],
+-                   uselib_store='NDN_CXX', mandatory=True)
++    conf.add_os_flags("LIB_NDN_CXX")
++    conf.add_os_flags("CXXFLAGS_NDN_CXX")
++    conf.add_os_flags("LINKFLAGS_NDN_CXX")
+ 
+     conf.env['WITH_TESTS'] = conf.options.with_tests
+     conf.env['WITH_EXAMPLES'] = conf.options.with_examples
+-- 
+2.17.1
+
