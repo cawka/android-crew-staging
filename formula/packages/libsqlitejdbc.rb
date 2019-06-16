@@ -2,7 +2,7 @@ class Libsqlitejdbc < Package
 
   desc 'SqliteJdbc'
   homepage 'https://github.com/xerial/sqlite-jdbc'
-  url 'https://github.com/xerial/sqlite-jdbc.git|git_commit:118b39aeefa1e8b2d0049eb444b414e9c5a1ab7c'
+  url 'https://github.com/xerial/sqlite-jdbc.git|git_commit:d95842040de3c4c6f15cfeab5b6ea90787690d42'
 
   release version: '3.25.2.1', crystax_version: 1
 
@@ -43,7 +43,7 @@ class Libsqlitejdbc < Package
 
     bin_dir = File.join(install_dir, 'lib')
     FileUtils.mkdir_p bin_dir
-    FileUtils.cp "target/sqlite-3.27.2-Linux-#{target(abi)}/libsqlitejdbc.so", bin_dir
+    FileUtils.cp "target/sqlite-3.25.2-Linux-#{target(abi)}/libsqlitejdbc.so", bin_dir
 
     # this to make the build script happy, no actual includes
     include_dir = File.join(install_dir, 'include')
