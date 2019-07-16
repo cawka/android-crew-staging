@@ -1,3 +1,5 @@
+NOTE: When installing packages for NDN development, follow the instructions related to the crew tool here (https://github.com/named-data-mobile/NFD-android/blob/master/README.md), in particular making sure to set the CREW_OWNER environment variable correctly.
+
 Crystax NDK's Crew
 ================================
 
