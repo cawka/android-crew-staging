@@ -6,7 +6,7 @@ class Nfd < Package
   # rugged doesn't support recursive clone of submodules, needed for websockets
   url "https://named-data.net/downloads/nfd-${version}.tar.bz2"
 
-  release version: '0.6.6', crystax_version: 3
+  release version: '0.6.6', crystax_version: 4
 
   depends_on 'boost'
   depends_on 'ndn_cxx'

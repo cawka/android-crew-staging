@@ -12,3 +12,4 @@ packages/openfec.rb 1.4.2_2 android 824fe5951a0b915eb067663c8bb29adec6e7e45a9ba3
 packages/webrtc.rb 59_2 android 1f56bceba08a6b81c56d0ba38793a69c3c9abb388a89d51118416e9266acc50c
 packages/ndn_cxx.rb 0.6.6-1_1 android 79129963034835e8f2ae466efabc47263df04c279daba5bae0e9778d20ed8499
 packages/ndncert_guest.rb 0.1.1-1_1 android 8f311136edaee43a18a7d9b6a1c6b7a7503985da3fbc2b5522ae370aff6c1178
+packages/nfd.rb 0.6.6_4 android 769bbb85ac315884c37236ab0060585c67affb0b4d8298bc99fbb92753c776b6
