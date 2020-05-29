@@ -13,3 +13,8 @@ packages/webrtc.rb 59_2 android 1f56bceba08a6b81c56d0ba38793a69c3c9abb388a89d511
 packages/ndn_cxx.rb 0.6.6-1_1 android 79129963034835e8f2ae466efabc47263df04c279daba5bae0e9778d20ed8499
 packages/ndncert_guest.rb 0.1.1-1_1 android 8f311136edaee43a18a7d9b6a1c6b7a7503985da3fbc2b5522ae370aff6c1178
 packages/nfd.rb 0.6.6_4 android 769bbb85ac315884c37236ab0060585c67affb0b4d8298bc99fbb92753c776b6
+packages/boost.rb 1.73.0_1 android eeacdff9a6b134f2d037492f328beef91b620c5ae3f33df17ab798acd708147f
+packages/ndn_cxx.rb 0.7.0_1 android cae495a688d01e6ad1a4cb2f24883cee6bbc8b8a96f52c8a255312e57090df8c
+packages/nfd.rb 0.7.0_1 android 3dba65872b35dc64003f02b1a92e98e30ad8264bb591f757988b1c53533b58f6
+packages/openssl.rb 1.1.1g_1 android 4a6161d4b2203a7498a1e590c9b7c1e185e751ce94b1c05ac7266d6dc95c0fbc
+packages/sqlite.rb 3.32.1_1 android 10e73a1ff524dbb51271ed8149ee0cde4b9d0b45aad12bf87618f6ba9413b05e
