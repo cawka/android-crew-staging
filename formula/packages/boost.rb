@@ -4,7 +4,8 @@ class Boost < Package
   homepage "http://www.boost.org"
   url "https://downloads.sourceforge.net/project/boost/boost/${version}/boost_${block}.tar.bz2" do |r| r.version.gsub('.', '_') end
 
-  release version: '1.70.0', crystax_version: 1
+  release version: '1.73.0', crystax_version: 1
+  # release version: '1.70.0', crystax_version: 1
   # release version: '1.68.0', crystax_version: 1
 
   # todo: add versions, like this: python:2.7.*, python:3.*.*
@@ -107,15 +108,11 @@ class Boost < Package
       build_env.clear
       stl_name = toolchain.stl_name
       puts "    using C++ standard library: #{stl_name}"
-      # todo: copy sources for every toolchain
-      work_dir = "#{src_dir}/#{stl_name}"
-      host_tc_dir = "#{work_dir}/host-bin"
-      FileUtils.mkdir_p host_tc_dir
-      host_cc = "#{host_tc_dir}/cc"
-      # Build.gen_host_compiler_wrapper host_cc, 'gcc'
 
-      build_env['PATH'] = "#{work_dir}:#{ENV['PATH']}"
-      system './bootstrap.sh',  "--with-toolset=cc"
+      work_dir = "#{src_dir}/#{stl_name}"
+      prefix_dir = "#{work_dir}/install"
+
+      system './bootstrap.sh'
 
       gen_user_config_jam src_dir
 
@@ -124,7 +121,7 @@ class Boost < Package
       setup_build_env(abi, toolchain)
       @build_env['CXXFLAGS'] += '-fPIC -Wno-long-long'
 
-      build_env['PATH'] = "#{src_dir}:#{ENV['PATH']}"
+      # build_env['PATH'] = "#{src_dir}:#{ENV['PATH']}"
 
       # build without python
       prefix_dir = "#{work_dir}/install"
