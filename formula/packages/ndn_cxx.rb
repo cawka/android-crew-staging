@@ -2,9 +2,9 @@ class NdnCxx < Package
 
   desc "ndn-cxx library"
   homepage "https://named-data.net/doc/ndn-cxx/"
-  url 'git://github.com/named-data/ndn-cxx.git|git_commit:0d748af32fd701b0d4fb6088a472f336790ee6f9'
+  url 'git://github.com/named-data/ndn-cxx.git|git_commit:cf8ffd495a51fc9a1fecc9ee20b4a5a82dcbd850'
 
-  release version: '0.6.6-1', crystax_version: 1
+  release version: '0.7.0', crystax_version: 1
 
   depends_on 'boost'
   depends_on 'openssl'
@@ -57,11 +57,12 @@ class NdnCxx < Package
 
       setup_build_env(abi, toolchain)
 
-      File.open("VERSION", "w") do |f|
+      File.open("VERSION.info", "w") do |f|
         f.write release.version
       end
 
-      cxx_args = [ "--prefix=/",
+      cxx_args = [ "--without-pch",
+                   "--prefix=/",
                    "--destdir=#{prefix_dir}",
                    "--boost-includes=#{@boost_dir}/include",
                    "--boost-libs=#{@boost_dir}/libs/#{abi}/#{stl_name}",
@@ -73,7 +74,7 @@ class NdnCxx < Package
       @build_env['LINKFLAGS'] = [
         "-L#{@openssl_dir}/libs/#{abi}",
         "-L#{@sqlite3_dir}/libs/#{abi}",
-        "-llog"
+        "-llog -lz"
       ].join(' ')
 
       puts "      configuring ndn-cxx"

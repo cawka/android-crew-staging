@@ -1,0 +1,188 @@
+From b1d850444878a113b74e68c83d54608710113e8e Mon Sep 17 00:00:00 2001
+From: Alexander Afanasyev <aa@cs.fiu.edu>
+Date: Fri, 5 Jul 2019 22:07:52 -0400
+Subject: [PATCH 2/3] util: Experimental support of out-of-the-box Android
+ logging
+
+Change-Id: I01cbb59faf505046c792393eb2e8df347212abcb
+---
+ ndn-cxx/util/impl/android-logger.cpp | 88 ++++++++++++++++++++++++++++
+ ndn-cxx/util/impl/android-logger.hpp | 44 ++++++++++++++
+ ndn-cxx/util/logging.cpp             |  8 +++
+ 3 files changed, 140 insertions(+)
+ create mode 100644 ndn-cxx/util/impl/android-logger.cpp
+ create mode 100644 ndn-cxx/util/impl/android-logger.hpp
+
+diff --git a/ndn-cxx/util/impl/android-logger.cpp b/ndn-cxx/util/impl/android-logger.cpp
+new file mode 100644
+index 00000000..4cbaf309
+--- /dev/null
++++ b/ndn-cxx/util/impl/android-logger.cpp
+@@ -0,0 +1,88 @@
++/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
++/*
++ * Copyright (c) 2013-2019 Regents of the University of California.
++ *
++ * This file is part of ndn-cxx library (NDN C++ library with eXperimental eXtensions).
++ *
++ * ndn-cxx library is free software: you can redistribute it and/or modify it under the
++ * terms of the GNU Lesser General Public License as published by the Free Software
++ * Foundation, either version 3 of the License, or (at your option) any later version.
++ *
++ * ndn-cxx library is distributed in the hope that it will be useful, but WITHOUT ANY
++ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
++ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
++ *
++ * You should have received copies of the GNU General Public License and GNU Lesser
++ * General Public License along with ndn-cxx, e.g., in COPYING.md file.  If not, see
++ * <http://www.gnu.org/licenses/>.
++ *
++ * See AUTHORS.md for complete list of ndn-cxx authors and contributors.
++ */
++
++#ifdef ANDROID
++
++#include "android-logger.hpp"
++
++#include <boost/log/sinks.hpp>
++
++#include <android/log.h>
++
++namespace ndn {
++namespace util {
++namespace log {
++namespace impl {
++
++struct AndroidSinkBackend : public boost::log::sinks::basic_sink_backend<boost::log::sinks::concurrent_feeding>
++{
++  int
++  convertToAndroidSeverity(LogLevel level)
++  {
++    switch (level) {
++    case LogLevel::FATAL:
++      return ANDROID_LOG_FATAL;
++    case LogLevel::NONE:
++      return ANDROID_LOG_SILENT;
++    case LogLevel::ERROR:
++      return ANDROID_LOG_ERROR;
++    case LogLevel::WARN:
++      return ANDROID_LOG_WARN;
++    case LogLevel::INFO:
++      return ANDROID_LOG_INFO;
++    case LogLevel::DEBUG:
++      return ANDROID_LOG_DEBUG;
++    case LogLevel::TRACE:
++      return ANDROID_LOG_VERBOSE;
++    case LogLevel::ALL:
++      return ANDROID_LOG_VERBOSE; // this is "ALL" for Android
++    }
++  }
++
++  void
++  consume(const boost::log::record_view& rec)
++  {
++    auto severity = convertToAndroidSeverity(rec[log::severity].get());
++    auto module = rec[log::module].get();
++    auto msg = rec[boost::log::expressions::smessage].get();
++
++    __android_log_print(severity, module.c_str(), "%s", msg.c_str());
++  }
++};
++
++void
++initializeAndroidLogger()
++{
++  static bool isInit = false;
++  if (isInit) {
++    return;
++  }
++  isInit = true;
++  auto sink = boost::make_shared<boost::log::sinks::synchronous_sink<AndroidSinkBackend>>();
++  boost::log::core::get()->add_sink(sink);
++}
++
++} // namespace impl
++} // namespace log
++} // namespace util
++} // namespace ndn
++
++#endif // ANDROID
+diff --git a/ndn-cxx/util/impl/android-logger.hpp b/ndn-cxx/util/impl/android-logger.hpp
+new file mode 100644
+index 00000000..d097e8dc
+--- /dev/null
++++ b/ndn-cxx/util/impl/android-logger.hpp
+@@ -0,0 +1,44 @@
++/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
++/*
++ * Copyright (c) 2013-2019 Regents of the University of California.
++ *
++ * This file is part of ndn-cxx library (NDN C++ library with eXperimental eXtensions).
++ *
++ * ndn-cxx library is free software: you can redistribute it and/or modify it under the
++ * terms of the GNU Lesser General Public License as published by the Free Software
++ * Foundation, either version 3 of the License, or (at your option) any later version.
++ *
++ * ndn-cxx library is distributed in the hope that it will be useful, but WITHOUT ANY
++ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
++ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
++ *
++ * You should have received copies of the GNU General Public License and GNU Lesser
++ * General Public License along with ndn-cxx, e.g., in COPYING.md file.  If not, see
++ * <http://www.gnu.org/licenses/>.
++ *
++ * See AUTHORS.md for complete list of ndn-cxx authors and contributors.
++ */
++
++#ifndef NDN_UTIL_IMPL_ANDROID_LOGGER_HPP
++#define NDN_UTIL_IMPL_ANDROID_LOGGER_HPP
++
++#ifdef ANDROID
++
++#include "ndn-cxx/util/logger.hpp"
++
++namespace ndn {
++namespace util {
++namespace log {
++namespace impl {
++
++void
++initializeAndroidLogger();
++
++} // namespace impl
++} // namespace log
++} // namespace util
++} // namespace ndn
++
++#endif // ANDROID
++
++#endif // NDN_UTIL_IMPL_ANDROID_LOGGER_HPP
+diff --git a/ndn-cxx/util/logging.cpp b/ndn-cxx/util/logging.cpp
+index ca6d584a..3f4c1359 100644
+--- a/ndn-cxx/util/logging.cpp
++++ b/ndn-cxx/util/logging.cpp
+@@ -23,6 +23,10 @@
+ #include "ndn-cxx/util/logger.hpp"
+ #include "ndn-cxx/util/time.hpp"
+ 
++#ifdef ANDROID
++#include "ndn-cxx/util/impl/android-logger.hpp"
++#endif
++
+ #include <boost/log/attributes/function.hpp>
+ #include <boost/log/expressions.hpp>
+ #include <boost/log/expressions/attr.hpp>
+@@ -100,6 +104,10 @@ Logging::Logging()
+   }
+ 
+   boost::log::core::get()->add_global_attribute("Timestamp", boost::log::attributes::make_function(&log::makeTimestamp));
++
++#ifdef ANDROID
++  log::impl::initializeAndroidLogger();
++#endif
+ }
+ 
+ void
+-- 
+2.26.2
+
