@@ -219,10 +219,10 @@ class Package < TargetBase
     arch = Build.arch_for_abi(abi)
     c_comp = toolchain.c_compiler(arch, abi)
 
-    c_comp += " --sysroot=#{Build.sysroot_libs(abi)}"
-    c_comp += " -isysroot #{Build.sysroot_inc(abi)}"
-    c_comp += " -isystem #{Build.sysroot_inc(abi)}/usr/include"
-    c_comp += " -isystem #{Build.sysroot_inc_arch(abi)}"
+    # c_comp += " --sysroot=#{Build.sysroot_libs(abi)}"
+    # c_comp += " -isysroot #{Build.sysroot_inc(abi)}"
+    # c_comp += " -isystem #{Build.sysroot_inc(abi)}/usr/include"
+    # c_comp += " -isystem #{Build.sysroot_inc_arch(abi)}"
 
     if not build_options[:c_wrapper]
       cc = c_comp
@@ -251,22 +251,22 @@ class Package < TargetBase
     if build_options[:use_cxx]
       cxx_comp = toolchain.cxx_compiler(arch, abi)
 
-      cxx_comp += " --sysroot=#{Build.sysroot_libs(abi)}"
-      cxx_comp += " -isysroot #{Build.sysroot_inc(abi)}"
-      cxx_comp += " -isystem #{Build.sysroot_inc(abi)}/usr/include"
-      cxx_comp += " -isystem #{Build.sysroot_inc_arch(abi)}"
+      # cxx_comp += " --sysroot=#{Build.sysroot_libs(abi)}"
+      # cxx_comp += " -isysroot #{Build.sysroot_inc(abi)}"
+      # cxx_comp += " -isystem #{Build.sysroot_inc(abi)}/usr/include"
+      # cxx_comp += " -isystem #{Build.sysroot_inc_arch(abi)}"
 
-      cxxflags = toolchain.search_path_for_stl_includes(abi)
+      # cxxflags = toolchain.search_path_for_stl_includes(abi)
 
-      ldflags_wrapper_arg = { before: ldflags + " #{toolchain.search_path_for_stl_libs(abi)}",
+      ldflags_wrapper_arg = { before: ldflags, #  + " #{toolchain.search_path_for_stl_libs(abi)}",
                               after:  "-l#{toolchain.stl_lib_name}_shared" }
 
       cxx = build_options[:cxx_wrapper] == true ? toolchain.cxx_compiler_name : build_options[:cxx_wrapper]
       cxx = "#{build_dir_for_abi(abi)}/#{cxx}"
-      Build.gen_compiler_wrapper cxx, cxx_comp, toolchain, build_options, cxxflags, ldflags_wrapper_arg
+      Build.gen_compiler_wrapper cxx, cxx_comp, toolchain, build_options, '', ldflags_wrapper_arg
 
       @build_env['CXX']      = cxx
-      @build_env['CXXCPP']   = "#{cxx} #{cxxflags} -E"
+      @build_env['CXXCPP']   = "#{cxx} #{cflags} -E"
       @build_env['CXXFLAGS'] = cflags
 
       puts @build_env
