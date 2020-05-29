@@ -2,9 +2,9 @@ class Sqlite < Package
 
   desc "SQLite library"
   homepage "https://sqlite.org/"
-  url "https://sqlite.org/2017/sqlite-amalgamation-${block}.zip" do |r| ('%s%-2s%-2s00' % r.version.split('.')).gsub(' ', '0') end
+  url "https://sqlite.org/2020/sqlite-amalgamation-${block}.zip" do |r| ('%s%02d%02d00' % r.version.split('.')).gsub(' ', '0') end
 
-  release version: '3.18.0', crystax_version: 3
+  release version: '3.32.1', crystax_version: 1
 
   build_options setup_env: false
   build_libs 'libsqlite3'
@@ -23,6 +23,13 @@ class Sqlite < Package
         f.puts 'LOCAL_CFLAGS += -fno-exceptions -fmessage-length=0'
         f.puts 'LOCAL_CFLAGS += -DSQLITE_THREADSAFE=1'
         f.puts "include $(BUILD_#{libtype.upcase}_LIBRARY)"
+      end
+
+      # Without this, NDK 21 somehow was adding libstdc++.so dependency, even though all code is just C
+      File.open("#{cwd}/#{libtype}/jni/Application.mk", "w") do |f|
+        f.puts 'APP_STL := c++_shared'
+        f.puts 'APP_CPPFLAGS += -fexceptions -frtti -std=c++14'
+        f.puts 'APP_PLATFORM := android-23'
       end
 
       system "#{Global::NDK_DIR}/ndk-build", "-C", "#{cwd}/#{libtype}", "APP_ABI=#{abi}", "V=1"
