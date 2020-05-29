@@ -1,0 +1,36 @@
+From aaa32a30932c67aeae2e7ae56b59ba7ba6f7bf05 Mon Sep 17 00:00:00 2001
+From: Alexander Afanasyev <aa@cs.fiu.edu>
+Date: Thu, 28 May 2020 22:08:01 -0400
+Subject: [PATCH 1/4] Rename VERSION to VERSION.info to avoid conflicts with
+ modern STL
+
+Change-Id: I5be60b42305856f7b45f3a7116c7bf0cb9082ecf
+---
+ wscript | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/wscript b/wscript
+index 003fc6c7..42e87c49 100644
+--- a/wscript
++++ b/wscript
+@@ -312,7 +312,7 @@ def version(ctx):
+     except (OSError, subprocess.CalledProcessError):
+         pass
+ 
+-    versionFile = ctx.path.find_node('VERSION')
++    versionFile = ctx.path.find_node('VERSION.info')
+     if not gotVersionFromGit and versionFile is not None:
+         try:
+             Context.g_module.VERSION = versionFile.read()
+@@ -329,7 +329,7 @@ def version(ctx):
+         except EnvironmentError as e:
+             Logs.warn('%s exists but is not readable (%s)' % (versionFile, e.strerror))
+     else:
+-        versionFile = ctx.path.make_node('VERSION')
++        versionFile = ctx.path.make_node('VERSION.info')
+ 
+     try:
+         versionFile.write(Context.g_module.VERSION)
+-- 
+2.26.2
+

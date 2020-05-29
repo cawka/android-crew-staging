@@ -6,7 +6,7 @@ class Nfd < Package
   # rugged doesn't support recursive clone of submodules, needed for websockets
   url "https://named-data.net/downloads/nfd-${version}.tar.bz2"
 
-  release version: '0.6.6', crystax_version: 4
+  release version: '0.7.0', crystax_version: 1
 
   depends_on 'boost'
   depends_on 'ndn_cxx'
@@ -49,7 +49,6 @@ class Nfd < Package
       work_dir = "#{src_dir}/#{stl_name}"
       prefix_dir = "#{work_dir}/install"
 
-
       host_tc_dir = "#{work_dir}/host-bin"
       FileUtils.mkdir_p host_tc_dir
       host_cc = "#{host_tc_dir}/cc"
@@ -57,7 +56,8 @@ class Nfd < Package
 
       setup_build_env(abi, toolchain)
 
-      File.open("VERSION", "w") do |f|
+      FileUtils.rm "VERSION"
+      File.open("VERSION.info", "w") do |f|
         f.write release.version
       end
 
@@ -85,7 +85,7 @@ class Nfd < Package
         "-L#{@openssl_dir}/libs/#{abi}",
         "-L#{@sqlite3_dir}/libs/#{abi}",
         "-lcrypto", "-lssl", "-lsqlite3",
-        "-llog",
+        "-llog", "-lz"
       ].join(' ')
 
       puts "      configuring NFD"
