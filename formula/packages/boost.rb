@@ -4,7 +4,7 @@ class Boost < Package
   homepage "http://www.boost.org"
   url "https://downloads.sourceforge.net/project/boost/boost/${version}/boost_${block}.tar.bz2" do |r| r.version.gsub('.', '_') end
 
-  release version: '1.73.0', crystax_version: 1
+  release version: '1.73.0', crystax_version: 2
   # release version: '1.70.0', crystax_version: 1
   # release version: '1.68.0', crystax_version: 1
 

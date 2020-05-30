@@ -4,7 +4,7 @@ class Sqlite < Package
   homepage "https://sqlite.org/"
   url "https://sqlite.org/2020/sqlite-amalgamation-${block}.zip" do |r| ('%s%02d%02d00' % r.version.split('.')).gsub(' ', '0') end
 
-  release version: '3.32.1', crystax_version: 1
+  release version: '3.32.1', crystax_version: 2
 
   build_options setup_env: false
   build_libs 'libsqlite3'
@@ -19,8 +19,8 @@ class Sqlite < Package
         f.puts 'LOCAL_MODULE := sqlite3'
         f.puts "LOCAL_SRC_FILES := #{cwd}/sqlite3.c"
         f.puts "LOCAL_INCLUDES := #{cwd}/"
-        f.puts 'LOCAL_CFLAGS := -Wall -Wno-unused -Wno-multichar -Wno-strict-aliasing -Werror'
-        f.puts 'LOCAL_CFLAGS += -fno-exceptions -fmessage-length=0'
+        # f.puts 'LOCAL_CFLAGS := -Wall -Wno-unused -Wno-multichar -Wno-strict-aliasing -Werror'
+        # f.puts 'LOCAL_CFLAGS += -fno-exceptions -fmessage-length=0'
         f.puts 'LOCAL_CFLAGS += -DSQLITE_THREADSAFE=1'
         f.puts "include $(BUILD_#{libtype.upcase}_LIBRARY)"
       end

@@ -6,7 +6,7 @@ class Openssl < Package
 
   # release version: '1.0.2o', crystax_version: 1
   # release version: '1.1.0h', crystax_version: 1
-  release version: '1.1.1g', crystax_version: 1
+  release version: '1.1.1g', crystax_version: 2
   # release version: '1.1.1-pre8', crystax_version: 1
 
   build_options copy_installed_dirs:  ['bin', 'include', 'lib']
