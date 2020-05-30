@@ -1,7 +1,7 @@
-From b1d850444878a113b74e68c83d54608710113e8e Mon Sep 17 00:00:00 2001
+From 2287424794833b402b8fe2e2de6c5f851de9f546 Mon Sep 17 00:00:00 2001
 From: Alexander Afanasyev <aa@cs.fiu.edu>
 Date: Fri, 5 Jul 2019 22:07:52 -0400
-Subject: [PATCH 2/3] util: Experimental support of out-of-the-box Android
+Subject: [PATCH 2/5] util: Experimental support of out-of-the-box Android
  logging
 
 Change-Id: I01cbb59faf505046c792393eb2e8df347212abcb
@@ -15,7 +15,7 @@ Change-Id: I01cbb59faf505046c792393eb2e8df347212abcb
 
 diff --git a/ndn-cxx/util/impl/android-logger.cpp b/ndn-cxx/util/impl/android-logger.cpp
 new file mode 100644
-index 00000000..4cbaf309
+index 00000000..f58c6110
 --- /dev/null
 +++ b/ndn-cxx/util/impl/android-logger.cpp
 @@ -0,0 +1,88 @@
@@ -40,7 +40,7 @@ index 00000000..4cbaf309
 + * See AUTHORS.md for complete list of ndn-cxx authors and contributors.
 + */
 +
-+#ifdef ANDROID
++#ifdef __ANDROID__
 +
 +#include "android-logger.hpp"
 +
@@ -106,10 +106,10 @@ index 00000000..4cbaf309
 +} // namespace util
 +} // namespace ndn
 +
-+#endif // ANDROID
++#endif // __ANDROID__
 diff --git a/ndn-cxx/util/impl/android-logger.hpp b/ndn-cxx/util/impl/android-logger.hpp
 new file mode 100644
-index 00000000..d097e8dc
+index 00000000..8e2486fe
 --- /dev/null
 +++ b/ndn-cxx/util/impl/android-logger.hpp
 @@ -0,0 +1,44 @@
@@ -137,7 +137,7 @@ index 00000000..d097e8dc
 +#ifndef NDN_UTIL_IMPL_ANDROID_LOGGER_HPP
 +#define NDN_UTIL_IMPL_ANDROID_LOGGER_HPP
 +
-+#ifdef ANDROID
++#ifdef __ANDROID__
 +
 +#include "ndn-cxx/util/logger.hpp"
 +
@@ -154,18 +154,18 @@ index 00000000..d097e8dc
 +} // namespace util
 +} // namespace ndn
 +
-+#endif // ANDROID
++#endif // __ANDROID__
 +
 +#endif // NDN_UTIL_IMPL_ANDROID_LOGGER_HPP
 diff --git a/ndn-cxx/util/logging.cpp b/ndn-cxx/util/logging.cpp
-index ca6d584a..3f4c1359 100644
+index ca6d584a..56c9a8c8 100644
 --- a/ndn-cxx/util/logging.cpp
 +++ b/ndn-cxx/util/logging.cpp
 @@ -23,6 +23,10 @@
  #include "ndn-cxx/util/logger.hpp"
  #include "ndn-cxx/util/time.hpp"
  
-+#ifdef ANDROID
++#ifdef __ANDROID__
 +#include "ndn-cxx/util/impl/android-logger.hpp"
 +#endif
 +
@@ -177,7 +177,7 @@ index ca6d584a..3f4c1359 100644
  
    boost::log::core::get()->add_global_attribute("Timestamp", boost::log::attributes::make_function(&log::makeTimestamp));
 +
-+#ifdef ANDROID
++#ifdef __ANDROID__
 +  log::impl::initializeAndroidLogger();
 +#endif
  }

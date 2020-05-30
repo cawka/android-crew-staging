@@ -1,7 +1,7 @@
-From 12d83335498fe686c3f97e789afe4d0a5fbc75a5 Mon Sep 17 00:00:00 2001
+From a06e6bb71b1b070a3992799ec160279359faf773 Mon Sep 17 00:00:00 2001
 From: Alexander Afanasyev <aa@cs.fiu.edu>
 Date: Thu, 28 May 2020 20:51:43 -0400
-Subject: [PATCH 3/3] Rename VERSION file as it interferes with Android
+Subject: [PATCH 3/5] Rename VERSION file as it interferes with Android
  includes
 
 Change-Id: Ie858b8966496d23f38f722d8115be988e6b4d048

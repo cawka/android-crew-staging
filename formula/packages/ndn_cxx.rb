@@ -4,7 +4,7 @@ class NdnCxx < Package
   homepage "https://named-data.net/doc/ndn-cxx/"
   url 'git://github.com/named-data/ndn-cxx.git|git_commit:cf8ffd495a51fc9a1fecc9ee20b4a5a82dcbd850'
 
-  release version: '0.7.0', crystax_version: 1
+  release version: '0.7.0', crystax_version: 2
 
   depends_on 'boost'
   depends_on 'openssl'
