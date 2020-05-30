@@ -2,7 +2,7 @@ Missing Native Package Manager for Android NDK
 ==============================================
 
 **Disclaimer:** This is a customized fork of CrystaX crew tool intended to work with official
-Google NDK.  Not fully tested and only a subset of packages is known to work.
+Google NDK (version 21+).  Not fully tested and only a subset of packages is known to work.
 
 ## 1. How to start
 
@@ -34,10 +34,6 @@ commands from there:
 previously installed precompiled binaries are automatically removed.  Therefore, after NDK
 upgrade, you will need to re-clone the crew tool repository and re-install (re-compile) the
 desired libraries.
-
-**WARNING** as of July 16, 2019, the latest Google NDK (version 20) has a problem compiling
-  code for `armeabi` CPU that results in crashes when using the compiled library through JNI.
-  It is recommended to use NDK version 19 if `armeabi` platform support is requireed.
 
 
 ## 2. Commands
