@@ -1,0 +1,279 @@
+From 6699b7451c5456c5a569c7bfd32a40f5a1a9f527 Mon Sep 17 00:00:00 2001
+From: Alexander Afanasyev <aa@cs.fiu.edu>
+Date: Fri, 5 Jul 2019 22:07:52 -0400
+Subject: [PATCH 2/2] util: Experimental support of out-of-the-box Android
+ logging
+
+Refs: #4970
+Change-Id: I01cbb59faf505046c792393eb2e8df347212abcb
+---
+ .waf-tools/cross.py                  | 22 ++++++++
+ ndn-cxx/util/impl/logger-android.cpp | 77 ++++++++++++++++++++++++++++
+ ndn-cxx/util/impl/logger-android.hpp | 42 +++++++++++++++
+ ndn-cxx/util/logging.cpp             | 14 +++--
+ wscript                              | 14 +++--
+ 5 files changed, 163 insertions(+), 6 deletions(-)
+ create mode 100644 .waf-tools/cross.py
+ create mode 100644 ndn-cxx/util/impl/logger-android.cpp
+ create mode 100644 ndn-cxx/util/impl/logger-android.hpp
+
+diff --git a/.waf-tools/cross.py b/.waf-tools/cross.py
+new file mode 100644
+index 00000000..c4ebbbeb
+--- /dev/null
++++ b/.waf-tools/cross.py
+@@ -0,0 +1,22 @@
++# -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
++
++from waflib import Utils
++
++def options(opt):
++    opt.add_option('--build', default=Utils.unversioned_sys_platform(), help='''Build environment that is doing the actual compilation (e.g., darwin)''')
++    opt.add_option('--host', default=Utils.unversioned_sys_platform(), help='''Host environment on which the compiled binary will run (e.g., android)''')
++    # opt.add_option('--target', default=Utils.unversioned_sys_platform(), help='''Target environment on which the compiled binary's output will run''')
++
++def configure(conf):
++    conf.env.BUILD = conf.options.build
++    conf.env.HOST = conf.options.host
++    # conf.env.TARGET = conf.options.target
++
++    conf.start_msg('Build environment')
++    conf.end_msg(conf.env.BUILD)
++
++    conf.start_msg('Host environment')
++    conf.end_msg(conf.env.HOST)
++
++    # conf.start_msg('Target environment')
++    # conf.end_msg(conf.env.TARGET)
+diff --git a/ndn-cxx/util/impl/logger-android.cpp b/ndn-cxx/util/impl/logger-android.cpp
+new file mode 100644
+index 00000000..613e9015
+--- /dev/null
++++ b/ndn-cxx/util/impl/logger-android.cpp
+@@ -0,0 +1,77 @@
++/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
++/*
++ * Copyright (c) 2013-2021 Regents of the University of California.
++ *
++ * This file is part of ndn-cxx library (NDN C++ library with eXperimental eXtensions).
++ *
++ * ndn-cxx library is free software: you can redistribute it and/or modify it under the
++ * terms of the GNU Lesser General Public License as published by the Free Software
++ * Foundation, either version 3 of the License, or (at your option) any later version.
++ *
++ * ndn-cxx library is distributed in the hope that it will be useful, but WITHOUT ANY
++ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
++ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
++ *
++ * You should have received copies of the GNU General Public License and GNU Lesser
++ * General Public License along with ndn-cxx, e.g., in COPYING.md file.  If not, see
++ * <http://www.gnu.org/licenses/>.
++ *
++ * See AUTHORS.md for complete list of ndn-cxx authors and contributors.
++ */
++
++#include "ndn-cxx/util/impl/logger-android.hpp"
++
++#include <boost/log/sinks.hpp>
++
++#include <android/log.h>
++
++namespace ndn {
++namespace util {
++namespace impl {
++
++class AndroidSinkBackend : public boost::log::sinks::basic_sink_backend<boost::log::sinks::concurrent_feeding>
++{
++public:
++  static int
++  convertToAndroidSeverity(LogLevel level)
++  {
++    switch (level) {
++    case LogLevel::FATAL:
++      return ANDROID_LOG_FATAL;
++    case LogLevel::NONE:
++      return ANDROID_LOG_SILENT;
++    case LogLevel::ERROR:
++      return ANDROID_LOG_ERROR;
++    case LogLevel::WARN:
++      return ANDROID_LOG_WARN;
++    case LogLevel::INFO:
++      return ANDROID_LOG_INFO;
++    case LogLevel::DEBUG:
++      return ANDROID_LOG_DEBUG;
++    case LogLevel::TRACE:
++      return ANDROID_LOG_VERBOSE;
++    case LogLevel::ALL:
++      return ANDROID_LOG_VERBOSE; // this is "ALL" for Android
++    }
++  }
++
++  void
++  consume(const boost::log::record_view& rec)
++  {
++    auto severity = convertToAndroidSeverity(rec[log::severity].get());
++    auto module = rec[log::module].get();
++    auto msg = rec[boost::log::expressions::smessage].get();
++
++    __android_log_write(severity, module.data(), msg.data());
++  }
++};
++
++boost::shared_ptr<boost::log::sinks::sink>
++makeAndroidLogger()
++{
++  return boost::make_shared<boost::log::sinks::synchronous_sink<AndroidSinkBackend>>();
++}
++
++} // namespace impl
++} // namespace util
++} // namespace ndn
+diff --git a/ndn-cxx/util/impl/logger-android.hpp b/ndn-cxx/util/impl/logger-android.hpp
+new file mode 100644
+index 00000000..a079d0ce
+--- /dev/null
++++ b/ndn-cxx/util/impl/logger-android.hpp
+@@ -0,0 +1,42 @@
++/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
++/*
++ * Copyright (c) 2013-2021 Regents of the University of California.
++ *
++ * This file is part of ndn-cxx library (NDN C++ library with eXperimental eXtensions).
++ *
++ * ndn-cxx library is free software: you can redistribute it and/or modify it under the
++ * terms of the GNU Lesser General Public License as published by the Free Software
++ * Foundation, either version 3 of the License, or (at your option) any later version.
++ *
++ * ndn-cxx library is distributed in the hope that it will be useful, but WITHOUT ANY
++ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
++ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
++ *
++ * You should have received copies of the GNU General Public License and GNU Lesser
++ * General Public License along with ndn-cxx, e.g., in COPYING.md file.  If not, see
++ * <http://www.gnu.org/licenses/>.
++ *
++ * See AUTHORS.md for complete list of ndn-cxx authors and contributors.
++ */
++
++#ifndef NDN_UTIL_IMPL_LOGGER_ANDROID_HPP
++#define NDN_UTIL_IMPL_LOGGER_ANDROID_HPP
++
++#include "ndn-cxx/util/logger.hpp"
++
++#ifndef __ANDROID__
++#error "This file should not be compiled ..."
++#endif
++
++namespace ndn {
++namespace util {
++namespace impl {
++
++boost::shared_ptr<boost::log::sinks::sink>
++makeAndroidLogger();
++
++} // namespace impl
++} // namespace util
++} // namespace ndn
++
++#endif // NDN_UTIL_IMPL_LOGGER_ANDROID_HPP
+diff --git a/ndn-cxx/util/logging.cpp b/ndn-cxx/util/logging.cpp
+index 4db9f287..9068da6f 100644
+--- a/ndn-cxx/util/logging.cpp
++++ b/ndn-cxx/util/logging.cpp
+@@ -1,6 +1,6 @@
+ /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
+ /*
+- * Copyright (c) 2013-2020 Regents of the University of California.
++ * Copyright (c) 2013-2021 Regents of the University of California.
+  *
+  * This file is part of ndn-cxx library (NDN C++ library with eXperimental eXtensions).
+  *
+@@ -23,6 +23,10 @@
+ #include "ndn-cxx/util/logger.hpp"
+ #include "ndn-cxx/util/time.hpp"
+ 
++#ifdef __ANDROID__
++#include "ndn-cxx/util/impl/logger-android.hpp"
++#endif
++
+ #include <boost/log/attributes/function.hpp>
+ #include <boost/log/expressions.hpp>
+ #include <boost/log/expressions/attr.hpp>
+@@ -96,8 +100,12 @@ Logging::Logging()
+     wantAutoFlush = false;
+   }
+ 
+-  // cannot call the static setDestination that uses the singleton Logging object that is not yet constructed
+-  auto destination = makeDefaultStreamDestination(shared_ptr<std::ostream>(&std::clog, [] (auto) {}), wantAutoFlush);
++  // cannot call the static setDestination, as the singleton object is not yet constructed
++#ifndef __ANDROID__
++    auto destination = makeDefaultStreamDestination(shared_ptr<std::ostream>(&std::clog, [] (auto) {}));
++#else
++    auto destination = impl::makeAndroidLogger();
++#endif // __ANDROID__
+   this->setDestinationImpl(std::move(destination));
+ 
+   environ = std::getenv("NDN_LOG");
+diff --git a/wscript b/wscript
+index ee04a033..a6033072 100644
+--- a/wscript
++++ b/wscript
+@@ -11,7 +11,7 @@ GIT_TAG_PREFIX = 'ndn-cxx-'
+ 
+ def options(opt):
+     opt.load(['compiler_cxx', 'gnu_dirs', 'c_osx'])
+-    opt.load(['default-compiler-flags', 'compiler-features',
++    opt.load(['cross', 'default-compiler-flags', 'compiler-features',
+               'coverage', 'pch', 'sanitizers', 'osx-frameworks',
+               'boost', 'openssl', 'sqlite3',
+               'doxygen', 'sphinx_build'],
+@@ -71,7 +71,7 @@ def configure(conf):
+     if not conf.options.enable_shared and not conf.options.enable_static:
+         conf.fatal('Either static library or shared library must be enabled')
+ 
+-    conf.load(['compiler_cxx', 'gnu_dirs', 'c_osx',
++    conf.load(['cross', 'compiler_cxx', 'gnu_dirs', 'c_osx',
+                'default-compiler-flags', 'compiler-features',
+                'pch', 'osx-frameworks', 'boost', 'openssl', 'sqlite3',
+                'doxygen', 'sphinx_build'])
+@@ -192,7 +192,8 @@ def build(bld):
+         source=bld.path.ant_glob('ndn-cxx/**/*.cpp',
+                                  excl=['ndn-cxx/**/*-osx.cpp',
+                                        'ndn-cxx/**/*netlink*.cpp',
+-                                       'ndn-cxx/**/*-sqlite3.cpp']),
++                                       'ndn-cxx/**/*-sqlite3.cpp',
++                                       'ndn-cxx/**/*-android.cpp']),
+         features='pch',
+         headers='ndn-cxx/impl/common-pch.hpp',
+         use='ndn-cxx-mm-objects version BOOST OPENSSL SQLITE3 ATOMIC RT PTHREAD',
+@@ -207,6 +208,9 @@ def build(bld):
+     if bld.env.HAVE_NETLINK:
+         libndn_cxx['source'] += bld.path.ant_glob('ndn-cxx/**/*netlink*.cpp')
+ 
++    if bld.env.HOST == 'android':
++        libndn_cxx['source'] += bld.path.ant_glob('ndn-cxx/**/*-android.cpp')
++
+     # In case we want to make it optional later
+     libndn_cxx['source'] += bld.path.ant_glob('ndn-cxx/**/*-sqlite3.cpp')
+ 
+@@ -277,6 +281,7 @@ def build(bld):
+                                 excl=['ndn-cxx/**/*-osx.hpp',
+                                       'ndn-cxx/**/*netlink*.hpp',
+                                       'ndn-cxx/**/*-sqlite3.hpp',
++                                      'ndn-cxx/**/*-android.hpp',
+                                       'ndn-cxx/**/impl/**/*'])
+ 
+     if bld.env.HAVE_OSX_FRAMEWORKS:
+@@ -285,6 +290,9 @@ def build(bld):
+     if bld.env.HAVE_NETLINK:
+         headers += bld.path.ant_glob('ndn-cxx/**/*netlink*.hpp', excl='ndn-cxx/**/impl/**/*')
+ 
++    if bld.env.HOST == 'android':
++        headers += bld.path.ant_glob('ndn-cxx/**/*-android.hpp', excl='ndn-cxx/**/impl/**/*')
++
+     # In case we want to make it optional later
+     headers += bld.path.ant_glob('ndn-cxx/**/*-sqlite3.hpp', excl='ndn-cxx/**/impl/**/*')
+ 
+-- 
+2.30.1
+

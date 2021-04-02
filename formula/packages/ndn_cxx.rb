@@ -2,9 +2,9 @@ class NdnCxx < Package
 
   desc "ndn-cxx library"
   homepage "https://named-data.net/doc/ndn-cxx/"
-  url 'git://github.com/named-data/ndn-cxx.git|git_commit:cf8ffd495a51fc9a1fecc9ee20b4a5a82dcbd850'
+  url 'git://github.com/named-data/ndn-cxx.git|git_commit:bdfb53aa09be3b0095b5392c0c24bef23c291e2f'
 
-  release version: '0.7.0', crystax_version: 2
+  release version: '0.7.1', crystax_version: 1
 
   depends_on 'boost'
   depends_on 'openssl'
@@ -61,7 +61,8 @@ class NdnCxx < Package
         f.write release.version
       end
 
-      cxx_args = [ "--without-pch",
+      cxx_args = [ "--host=android",
+                   "--without-pch",
                    "--prefix=/",
                    "--destdir=#{prefix_dir}",
                    "--boost-includes=#{@boost_dir}/include",
