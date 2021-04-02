@@ -1,0 +1,133 @@
+From ca5e93d224c5852fe566330c2d753d82013ec77b Mon Sep 17 00:00:00 2001
+From: Alexander Afanasyev <aa@cs.fiu.edu>
+Date: Thu, 28 May 2020 22:12:17 -0400
+Subject: [PATCH 1/3] Build patches
+
+Change-Id: Ic5fcfc0c0a62289590df86783e16c6eec0bdc65a
+---
+ tools/wscript | 25 ++++++++++++++++---------
+ wscript       | 30 +++++++++++++++++++++++-------
+ 2 files changed, 39 insertions(+), 16 deletions(-)
+
+diff --git a/tools/wscript b/tools/wscript
+index 7f4ff7f6..f191fd4b 100644
+--- a/tools/wscript
++++ b/tools/wscript
+@@ -28,6 +28,7 @@ top = '..'
+ from waflib import Context, Utils
+ 
+ def build(bld):
++    VERSION_BASE = Context.g_module.VERSION_BASE
+     commonDeps = 'core-objects NDN_CXX BOOST LIBRESOLV'
+ 
+     # Single object tools:
+@@ -36,10 +37,12 @@ def build(bld):
+     # These tools cannot be unit-tested.
+     for tool in bld.path.ant_glob('*.cpp'):
+         name = tool.change_ext('').path_from(bld.path.get_bld())
+-        bld.program(name=name,
+-                    target='../bin/%s' % name,
+-                    source=[tool],
+-                    use=commonDeps)
++        bld.shlib(name=name,
++                  vnum=VERSION_BASE,
++                  cnum=VERSION_BASE,
++                  target='../bin/%s' % name,
++                  source=[tool],
++                  use=commonDeps)
+ 
+     # Sub-directory tools:
+     # tools/example-tool/**/*.cpp is compiled and linked into build/bin/example-tool.
+@@ -52,6 +55,8 @@ def build(bld):
+             continue # not a C++ tool
+ 
+         name = subdir.path_from(bld.path)
++        if name == 'ndn-autoconfig':  # disabled for now
++            continue
+         srcFiles = subdir.ant_glob('**/*.cpp', excl=['main.cpp'])
+         srcObjects = ''
+         if srcFiles:
+@@ -62,11 +67,13 @@ def build(bld):
+                         includes=name)
+             testableObjects.append(srcObjects)
+ 
+-        bld.program(name=name,
+-                    target='../bin/%s' % name,
+-                    source=[mainFile],
+-                    use=commonDeps + ' ' + srcObjects,
+-                    includes=name)
++        bld.shlib(name=name,
++                  vnum=VERSION_BASE,
++                  cnum=VERSION_BASE,
++                  target='../bin/%s' % name,
++                  source=[mainFile],
++                  use=commonDeps + ' ' + srcObjects,
++                  includes=name)
+ 
+     bld.objects(target='tools-objects',
+                 source=[],
+diff --git a/wscript b/wscript
+index 15cb62d6..d8478534 100644
+--- a/wscript
++++ b/wscript
+@@ -93,8 +93,11 @@ def configure(conf):
+ 
+     conf.find_program('bash', var='BASH')
+ 
+-    conf.check_cfg(package='libndn-cxx', args=['--cflags', '--libs'], uselib_store='NDN_CXX',
+-                   pkg_config_path=os.environ.get('PKG_CONFIG_PATH', '%s/pkgconfig' % conf.env.LIBDIR))
++    # conf.check_cfg(package='libndn-cxx', args=['--cflags', '--libs'], uselib_store='NDN_CXX',
++    #                pkg_config_path=os.environ.get('PKG_CONFIG_PATH', '%s/pkgconfig' % conf.env.LIBDIR))
++    conf.add_os_flags("LIB_NDN_CXX")
++    conf.add_os_flags("CXXFLAGS_NDN_CXX")
++    conf.add_os_flags("LINKFLAGS_NDN_CXX")
+ 
+     if not conf.options.without_systemd:
+         conf.check_cfg(package='libsystemd', args=['--cflags', '--libs'],
+@@ -108,7 +111,7 @@ def configure(conf):
+ 
+     conf.check_cxx(header_name='valgrind/valgrind.h', define_name='HAVE_VALGRIND', mandatory=False)
+ 
+-    boost_libs = ['system', 'program_options', 'filesystem']
++    boost_libs = ['system', 'atomic', 'chrono', 'program_options', 'regex', 'filesystem', 'date_time', 'iostreams', 'thread', 'log', 'log_setup']
+     if conf.env.WITH_TESTS or conf.env.WITH_OTHER_TESTS:
+         boost_libs.append('unit_test_framework')
+ 
+@@ -193,10 +196,12 @@ def build(bld):
+     if bld.env.WITH_OTHER_TESTS:
+         nfd_objects.source += bld.path.ant_glob('tests/other/fw/*.cpp')
+ 
+-    bld.program(name='nfd',
+-                target='bin/nfd',
+-                source='daemon/main.cpp',
+-                use='daemon-objects SYSTEMD')
++    bld.shlib(name='nfd',
++              vnum=VERSION_BASE,
++              cnum=VERSION_BASE,
++              target='bin/nfd',
++              source='daemon/main.cpp',
++              use='daemon-objects SYSTEMD')
+ 
+     bld.recurse('tools')
+     bld.recurse('tests')
+@@ -218,6 +223,17 @@ def build(bld):
+             source=systemd_units,
+             target=[u.change_ext('') for u in systemd_units])
+ 
++    headers = bld.path.ant_glob(['core/**/*.hpp', 'daemon/**/*.hpp', 'rib/**/*.hpp'])
++
++    bld.install_files('%s/NFD' % bld.env['INCLUDEDIR'], headers,
++                      relative_trick=True, cwd=bld.path.find_node('.'))
++
++    bld.install_files('%s/NFD/core' % bld.env['INCLUDEDIR'],
++                      bld.path.find_resource('core/config.hpp'))
++
++    bld.install_files('%s/NFD/core' % bld.env['INCLUDEDIR'],
++                      bld.path.find_resource('core/version.hpp'))
++
+     if bld.env.SPHINX_BUILD:
+         bld(features='sphinx',
+             name='manpages',
+-- 
+2.30.1
+

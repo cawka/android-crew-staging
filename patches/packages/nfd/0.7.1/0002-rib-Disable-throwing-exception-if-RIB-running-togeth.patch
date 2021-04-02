@@ -1,0 +1,29 @@
+From 49430d8ccac32655a3e1b848344187d53e7d917a Mon Sep 17 00:00:00 2001
+From: Alexander Afanasyev <aa@cs.fiu.edu>
+Date: Thu, 28 May 2020 22:12:56 -0400
+Subject: [PATCH 2/3] rib: Disable throwing exception if RIB running together
+
+Change-Id: I9719254ca7cff77cdf876edcca32476be16ca3c3
+---
+ daemon/rib/service.cpp | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/daemon/rib/service.cpp b/daemon/rib/service.cpp
+index 596fa278..38570a92 100644
+--- a/daemon/rib/service.cpp
++++ b/daemon/rib/service.cpp
+@@ -120,9 +120,11 @@ Service::Service(ndn::KeyChain& keyChain, shared_ptr<ndn::Transport> localNfdTra
+   if (s_instance != nullptr) {
+     NDN_THROW(std::logic_error("RIB service cannot be instantiated more than once"));
+   }
++#ifndef __ANDROID__
+   if (&getGlobalIoService() != &getRibIoService()) {
+     NDN_THROW(std::logic_error("RIB service must run on RIB thread"));
+   }
++#endif // __ANDROID__
+   s_instance = this;
+ 
+   ConfigFile config(ConfigFile::ignoreUnknownSection);
+-- 
+2.30.1
+
